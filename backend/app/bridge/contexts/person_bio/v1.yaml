@@ -1,0 +1,86 @@
+prompt_template:
+  metadata:
+    name: "persona_synthesis_prompt"
+    version: "1.1.0"
+    description: "Transforms user survey responses into a standardized culinary profile and explicitly states dietary suitability criteria."
+    author: "Core48 Engineering"
+
+  model_config:
+    temperature: 0.2
+    max_tokens: 300
+    format: "json"
+
+  system_prompt: |
+    You are an expert clinical nutritionist and consumer psychology agent for an organic foods marketplace.
+    Your objective is to analyze raw multi-choice onboarding survey responses and synthesize them into a concise "User Persona Summary".
+
+    RULES:
+    1. Extract both explicit constraints (e.g., dietary restrictions, hard price limits) and implicit psychological drivers (e.g., combining 'Quick Bites' with 'Weight Loss' implies a preference for high-protein, minimal-prep macro meals).
+    2. Explicitly specify the food types, ingredients, and nutritional characteristics that are optimal for this user.
+    3. Normalize currency values strictly in Sri Lankan Rupees (LKR / Rs).
+    4. Output MUST strictly adhere to the defined JSON schema. Do NOT include markdown blocks, greetings, or conversational preamble.
+
+  inputs:
+    primary_goal: "{{ primary_goal }}"
+    dietary_restrictions: "{{ dietary_restrictions }}"
+    flavor_profile: "{{ flavor_profile }}"
+    prep_time_preference: "{{ prep_time_preference }}"
+    budget_alignment: "{{ budget_alignment }}"
+    price_range: "{{ price_range }}"
+
+  output_schema:
+    type: "object"
+    properties:
+      persona_code:
+        type: "string"
+        description: "A short hyphenated slug representing the user segment (e.g., 'vegan-weightloss-budget')."
+      target_archetype:
+        type: "string"
+        description: "A catchy 2-3 word title for the customer profile (e.g., 'Busy Eco-Conscious Athlete')."
+      synthesized_profile:
+        type: "string"
+        description: "A 40-60 word third-person analytical summary detailing nutritional needs, flavor inclinations, and buying friction points."
+      suitable_food_types:
+        type: "array"
+        items:
+          type: "string"
+        description: "Explicit list of food types, categories, or ingredient traits that are ideal for this user's profile."
+      key_attributes:
+        type: "array"
+        items:
+          type: "string"
+        description: "3-4 explicit tags extracted for fast filtering."
+      max_budget_lkr:
+        type: "number"
+        description: "Upper bound numerical value extracted from the price range in LKR."
+    required:
+      - "persona_code"
+      - "target_archetype"
+      - "synthesized_profile"
+      - "suitable_food_types"
+      - "key_attributes"
+      - "max_budget_lkr"
+
+  example_execution:
+    sample_input:
+      primary_goal: "Weight Loss"
+      dietary_restrictions: "Vegan"
+      flavor_profile: "Spicy"
+      prep_time_preference: "Quick Bites"
+      budget_alignment: "Budget-Conscious"
+      price_range: "Rs 0 to 100"
+    sample_output:
+      persona_code: "vegan-weightloss-quick-spicy"
+      target_archetype: "Thrifty Spicy Vegan"
+      synthesized_profile: "The user is a budget-conscious individual focused on calorie deficit through a plant-based diet. They prioritize high-flavor, bold spice profiles in ready-to-eat or low-prep formats under Rs 100, rejecting costly or time-intensive culinary options."
+      suitable_food_types:
+        - "Low-calorie spicy plant-based snacks"
+        - "Ready-to-eat chili-infused legumes or chickpeas"
+        - "High-fiber vegetable crisps with bold seasoning"
+        - "Quick-prep thermogenic herbal teas"
+      key_attributes:
+        - "Low Calorie"
+        - "Plant Based"
+        - "Fast Prep"
+        - "Under Rs 100"
+      max_budget_lkr: 100
