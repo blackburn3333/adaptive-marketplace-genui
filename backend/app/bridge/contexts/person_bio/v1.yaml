@@ -1,7 +1,7 @@
 prompt_template:
   metadata:
     name: "persona_synthesis_prompt"
-    version: "1.1.0"
+    version: "1.0.0"
     description: "Transforms user survey responses into a standardized culinary profile and explicitly states dietary suitability criteria."
     author: "Jayendra Matarage"
 
@@ -9,6 +9,11 @@ prompt_template:
     temperature: 0.2
     max_tokens: 300
     format: "json"
+
+  ollama_execution:
+    stream: false
+    keep_alive: 0
+    model: "gemma4:latest"
 
   system_prompt: |
     You are an expert clinical nutritionist and consumer psychology agent for an organic foods marketplace.
