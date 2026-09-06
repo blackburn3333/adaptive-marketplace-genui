@@ -3,7 +3,7 @@ prompt_template:
     name: "persona_synthesis_prompt"
     version: "1.1.0"
     description: "Transforms user survey responses into a standardized culinary profile and explicitly states dietary suitability criteria."
-    author: "Core48 Engineering"
+    author: "Jayendra Matarage"
 
   model_config:
     temperature: 0.2
