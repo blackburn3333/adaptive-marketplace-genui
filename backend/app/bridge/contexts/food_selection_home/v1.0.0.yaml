@@ -1,0 +1,119 @@
+prompt_template:
+  metadata:
+    name: "food_selection_matching_prompt"
+    version: "1.0.0"
+    description: "Evaluates a database food catalog against a synthesized user persona to rank, select, and personalize optimal food choices."
+    author: "Jayendra Matarage"
+
+  model_config:
+    temperature: 0.2
+    max_tokens: 600
+    format: "json"
+
+  ollama_execution:
+    model: "gemma4:latest"
+    stream: false
+    keep_alive: 0
+
+  system_prompt: |
+    You are an intelligent product recommendation and nutrition matching engine for an organic marketplace.
+    Your task is to analyze a synthesized User Persona alongside a candidate list of food items retrieved from a database, evaluate dietary suitability, and select the best matching items.
+
+    RULES:
+    1. STRICT FILTERING: Reject any food item that violates hard constraints in the user persona (e.g., exceeds max_budget_lkr, violates dietary restrictions like 'Vegan').
+    2. MATCH SCORING: Calculate a match score (1 to 100) based on how well the food aligns with the user's primary goal, flavor preferences, and suitable food types.
+    3. REASONING & PORTIONING: For selected items, provide a clear, persona-tailored selection justification, state an average recommended daily usage, and generate a customized title/description.
+    4. Currency values must be handled in Sri Lankan Rupees (LKR / Rs).
+    5. Output MUST strictly adhere to the defined JSON schema. Do NOT include markdown formatting, greetings, or prose outside the JSON payload.
+
+  inputs:
+    user_persona: "{{ user_persona_json }}"
+    available_foods: "{{ candidate_foods_json }}"
+
+  output_schema:
+    type: "object"
+    properties:
+      persona_code:
+        type: "string"
+        description: "The persona slug inherited from the user profile."
+      selected_foods:
+        type: "array"
+        items:
+          type: "object"
+          properties:
+            food_id:
+              type: "integer"
+              description: "The exact database ID of the matched food item."
+            match_score:
+              type: "integer"
+              description: "Relevance score from 1 to 100."
+            personalized_title:
+              type: "string"
+              description: "A persona-tailored headline highlighting why this item appeals to the user."
+            selection_reason:
+              type: "string"
+              description: "A 2-sentence rationale detailing why this food fits their specific goals, constraints, and budget."
+            recommended_daily_usage:
+              type: "string"
+              description: "Suggested daily portion size or serving frequency based on their dietary goals (e.g., '100g per day', '1 cup daily as a morning snack')."
+            highlight_tags:
+              type: "array"
+              items:
+                type: "string"
+              description: "Key promotional tags tailored to the profile (e.g., 'Under Rs 100', 'High Protein', 'Spicy')."
+            health_benefit_summary:
+              type: "string"
+              description: "A concise overview of nutritional advantages specific to their primary goal."
+          required:
+            - "food_id"
+            - "match_score"
+            - "personalized_title"
+            - "selection_reason"
+            - "recommended_daily_usage"
+            - "highlight_tags"
+            - "health_benefit_summary"
+    required:
+      - "persona_code"
+      - "selected_foods"
+
+  example_execution:
+    sample_input:
+      user_persona:
+        persona_code: "vegan-weightloss-quick-spicy"
+        target_archetype: "Thrifty Spicy Vegan"
+        synthesized_profile: "The user is a budget-conscious individual focused on calorie deficit through a plant-based diet. They prioritize high-flavor, bold spice profiles in ready-to-eat or low-prep formats under Rs 100."
+        suitable_food_types:
+          - "Low-calorie spicy plant-based snacks"
+          - "Ready-to-eat chili-infused legumes or chickpeas"
+        key_attributes:
+          - "Low Calorie"
+          - "Plant Based"
+          - "Fast Prep"
+          - "Under Rs 100"
+        max_budget_lkr: 100
+      available_foods:
+        - food_id: 101
+          name: "Spicy Roasted Chickpeas"
+          price_per_unit: 90
+          unit: "pack"
+          description: "Crunchy oven-roasted chickpeas spiced with chili and cumin."
+          tags: ["vegan", "organic", "spicy", "snack"]
+          nutrition_facts:
+            calories: 160
+            protein: 7
+            carbohydrates: 22
+            fats: 4
+    sample_output:
+      persona_code: "vegan-weightloss-quick-spicy"
+      selected_foods:
+        - food_id: 101
+          match_score: 95
+          personalized_title: "Bold & Spicy Calorie-Conscious Plant Crunch"
+          selection_reason: "This product aligns with your plant-based diet and spicy flavor preference while staying under your Rs 100 budget limit. It requires zero prep time and delivers a high-protein crunch that supports a calorie-restricted weight loss regimen."
+          recommended_daily_usage: "1 pack (50g) daily as a high-protein afternoon snack"
+          highlight_tags:
+            - "Under Rs 100"
+            - "Zero Prep"
+            - "7g Protein"
+            - "Vegan Certified"
+          health_benefit_summary: "High-fiber and high-protein legume snack that promotes satiety while staying within your daily calorie deficit goals."
