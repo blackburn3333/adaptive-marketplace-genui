@@ -1,4 +1,4 @@
-prompt_template:
+
   metadata:
     name: "persona_synthesis_prompt"
     version: "1.0.0"
